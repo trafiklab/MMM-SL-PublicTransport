@@ -177,7 +177,7 @@ Module.register("MMM-SL-PublicTransport", {
                 var displayCount = 0;
                 for (var ix = 0; ix < this.currentDepartures[is].departures.length; ix++) {
                     var dep = this.currentDepartures[is].departures[ix];
-                    if (this.cdir != -1 && this.cdir != dep.JourneyDirection) {
+                    if (this.cdir !== -1 && this.cdir !== dep.JourneyDirection) {
                         // We are changing direction, create an empty row to separate the two directions
                         this.cdir = dep.JourneyDirection;
                         var row = document.createElement("tr");
@@ -192,7 +192,7 @@ Module.register("MMM-SL-PublicTransport", {
                     if (!(this.hasLeft(dep.ExpectedDateTime) && this.config.omitDeparturesLeft)) {
                         displayCount++;
                         if (displayCount <= this.config.displaycount) { // Only show displaycount entries
-                            if (this.cdir == -1) this.cdir = dep.JourneyDirection;
+                            if (this.cdir === -1) this.cdir = dep.JourneyDirection;
                             var row = document.createElement("tr");
                             
                             var td = undefined;
@@ -278,7 +278,7 @@ Module.register("MMM-SL-PublicTransport", {
             var almostLeft = (this.config.dontDisplayIfAlmostleft ?
                 this.config.dontDisplayIfAlmostleft > dur :
                 false);
-            return (disp == 'left' || disp == 'now' || almostLeft);
+            return (disp === 'left' || disp === 'now' || almostLeft);
         } else {
             return false; // TODO To be updated when handling displayTime updates
         }
@@ -329,8 +329,8 @@ Module.register("MMM-SL-PublicTransport", {
 
     // --------------------------------------- Are we asking for this direction
     isWantedDirection: function (dir) {
-        if (this.config.direction !== undefined && this.config.direction != '') {
-            return dir == this.config.direction;
+        if (this.config.direction !== undefined && this.config.direction !== '') {
+            return dir === this.config.direction;
         }
         return true;
     },
@@ -361,7 +361,7 @@ Module.register("MMM-SL-PublicTransport", {
             this.currentDepartures.obtained = new Date();
             this.updateDom();
         }
-        if (notification == "SERVICE_FAILURE") {
+        if (notification === "SERVICE_FAILURE") {
             this.loaded = true;
             this.failure = payload;
             Log.info("Service failure: " + this.failure.resp.StatusCode + ':' + this.failure.resp.Message);

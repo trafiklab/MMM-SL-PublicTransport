@@ -14,7 +14,7 @@ var mode = 1;
 var request = require('request-promise');
 var apikey = process.argv[2];
 var searchstring = process.argv[3];
-if (searchstring == '-t') {
+if (searchstring === '-t') {
     var stationid = process.argv[4];    
     var mode = 2;
 }
@@ -47,7 +47,7 @@ function getStationId() {
 
     request(opt)
         .then(function(resp) {
-            if (resp.StatusCode == 0) {
+            if (resp.StatusCode === 0) {
                 console.log(resp);
            } else {
                 console.log("Something went wrong when getting location: " + resp.StatusCode + ': '+ resp.Message);
