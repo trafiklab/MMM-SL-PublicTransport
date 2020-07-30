@@ -22,7 +22,6 @@ module.exports = NodeHelper.create({
 
     // --------------------------------------- Start the helper
     start: function () {
-        //Log.info('Starting helper: '+ this.name);
         log('Starting helper: ' + this.name);
         this.started = false;
     },
@@ -42,7 +41,6 @@ module.exports = NodeHelper.create({
 
         clearInterval(this.updatetimer); // Clear the timer so that we can set it again
 
-        //debug("stationid is array="+Array.isArray(this.config.stationid));
         const Proms = [];
         // Loop over all stations
         if (this.config.stations !== undefined) {
@@ -56,15 +54,20 @@ module.exports = NodeHelper.create({
             });
 
             Promise.all(Proms).then(CurrentDeparturesArray => {
-                debug('all promises resolved '+CurrentDeparturesArray);
+                debug('all promises resolved ' + CurrentDeparturesArray);
                 self.sendSocketNotification('DEPARTURES', CurrentDeparturesArray); // Send departures to module
             }).catch(reason => {
-                debug('One or more promises rejected '+reason);
+                debug('One or more promises rejected ' + reason);
                 self.sendSocketNotification('SERVICE_FAILURE', reason);
             });
         } else {
             debug('Stations not defined ');
-            self.sendSocketNotification('SERVICE_FAILURE', { resp: { Message: 'config.stations is not defined', StatusCode: 500}});
+            self.sendSocketNotification('SERVICE_FAILURE', {
+                resp: {
+                    Message: 'config.stations is not defined',
+                    StatusCode: 500
+                }
+            });
         }
 
         self.scheduleUpdate(); // reinitiate the timer
@@ -78,7 +81,7 @@ module.exports = NodeHelper.create({
     //      DataAge: ??,            // The age of the data in ??
     //      departures: [dir][deps] // An array of array of Departure objects
     //  }
-    getDeparture: function(station, resolve, reject) {
+    getDeparture: function (station, resolve, reject) {
         log('Getting departures for station id ' + station.stationId);
         const self = this;
 
@@ -145,7 +148,7 @@ module.exports = NodeHelper.create({
                     //console.log(temp);
 
                     // TODO:Handle resp.ResponseData.StopPointDeviations
-                    CurrentDepartures.departures = temp; 
+                    CurrentDepartures.departures = temp;
                     log('Found ' + CurrentDepartures.departures.length + ' DEPARTURES for station id=' + station.stationId);
                     resolve(CurrentDepartures);
 
@@ -156,7 +159,7 @@ module.exports = NodeHelper.create({
             })
             .catch(function (err) {
                 log('Problems: station id=' + station.stationId + ' ' + err);
-                reject( { resp: { StatusCode: 600, Message: err } });
+                reject({resp: {StatusCode: 600, Message: err}});
             });
     },
 
@@ -166,7 +169,7 @@ module.exports = NodeHelper.create({
             const element = depArray[ix];
             let dep = new Departure(element);
             //debug("BLine: " + dep.LineNumber);
-            dep = this.fixJourneyDirection(station, dep); 
+            dep = this.fixJourneyDirection(station, dep);
             if (this.isWantedLine(station, dep)) {
                 if (this.isWantedDirection(dep.JourneyDirection)) { // TODO not needed, remove
                     debug("Adding Line: " + dep.LineNumber + " Dir:" + dep.JourneyDirection + " Dst:" + dep.Destination);
@@ -191,12 +194,12 @@ module.exports = NodeHelper.create({
     fixJourneyDirection: function (station, dep) {
         const swapper = [0, 2, 1];
         if (station.lines !== undefined && Array.isArray(station.lines)) {
-            for (let il=0; il < station.lines.length; il++) { // Check if this is a line we have defined
+            for (let il = 0; il < station.lines.length; il++) { // Check if this is a line we have defined
                 if (dep.LineNumber === station.lines[il].line) {
-                    debug("Checking direction for line "+ dep.LineNumber + " Dir: " + dep.JourneyDirection);
+                    debug("Checking direction for line " + dep.LineNumber + " Dir: " + dep.JourneyDirection);
                     if (station.lines[il].swapDir !== undefined && station.lines[il].swapDir) {
                         const newdir = swapper[dep.JourneyDirection];
-                        debug("Swapping direction for line "+ dep.LineNumber + " From: " + dep.JourneyDirection + " To: " + newdir);
+                        debug("Swapping direction for line " + dep.LineNumber + " From: " + dep.JourneyDirection + " To: " + newdir);
                         dep.JourneyDirection = newdir;
                     }
                 }
@@ -210,13 +213,13 @@ module.exports = NodeHelper.create({
         if (station.lines !== undefined) {
             if (Array.isArray(station.lines)) {
                 //debug('1')
-                for (let il=0; il < station.lines.length; il++) { // Check if this is a line we want
-                    line1 = (typeof(dep.LineNumber) === 'string' ? dep.LineNumber.toUpperCase() : dep.LineNumber);
-                    line2 = (typeof(station.lines[il].line) === 'string' ? station.lines[il].line.toUpperCase() : station.lines[il].line);
-                    debug("Lines "+ dep.LineNumber + " checked against "+ station.lines[il].line);
+                for (let il = 0; il < station.lines.length; il++) { // Check if this is a line we want
+                    line1 = (typeof (dep.LineNumber) === 'string' ? dep.LineNumber.toUpperCase() : dep.LineNumber);
+                    line2 = (typeof (station.lines[il].line) === 'string' ? station.lines[il].line.toUpperCase() : station.lines[il].line);
+                    debug("Lines " + dep.LineNumber + " checked against " + station.lines[il].line);
                     //debug("Lines t "+ typeof(dep.LineNumber) + " checked against t "+ typeof(station.lines[il].line));
                     if (line1 === line2) {
-                        debug("Checking line "+ dep.LineNumber + " Dir: " + dep.JourneyDirection)
+                        debug("Checking line " + dep.LineNumber + " Dir: " + dep.JourneyDirection)
                         if (station.lines[il].direction !== undefined) {
                             return dep.JourneyDirection === station.lines[il].direction;
                         } else {
@@ -235,7 +238,7 @@ module.exports = NodeHelper.create({
     },
 
     // --------------------------------------- Figure out the next update time
-    getNextUpdateInterval: function() {
+    getNextUpdateInterval: function () {
         if (this.config.highUpdateInterval === undefined) {
             return this.config.updateInterval;
         }
@@ -245,7 +248,7 @@ module.exports = NodeHelper.create({
             return this.config.updateInterval;
         }
         if (!Array.isArray(this.config.highUpdateInterval.times)) throw new Error("highUpdateInterval.times is not an array")
-        
+
         //Check which interval we are in and return the proper timer
         for (let i = 0; i < this.config.highUpdateInterval.times.length; i++) {
             const intervalDefinition = this.config.highUpdateInterval.times[i];
@@ -260,7 +263,7 @@ module.exports = NodeHelper.create({
         }
         return this.config.updateInterval;
     },
-    
+
     // --------------------------------------- Check if now is in this time
     isBetween: function (days, start, stop) {
         const now = new Date();
@@ -270,16 +273,16 @@ module.exports = NodeHelper.create({
                 if (0 < dow && dow < 6) {
                     return this.isTimeBetween(start, stop);
                 }
-            break;
+                break;
             case 'weekends':
                 if (0 === dow || dow === 6) {
                     return this.isTimeBetween(start, stop);
                 }
-            break;
+                break;
         }
         return false;
     },
-    
+
     // --------------------------------------- Check if now is between these times
     isTimeBetween: function (start, stop) {
         const now = new Date();
@@ -290,10 +293,10 @@ module.exports = NodeHelper.create({
             st = en;        // and swap the dates
             en = temp;
         }
-        
-        return now < en && now >st 
+
+        return now < en && now > st
     },
-        
+
     // --------------------------------------- Handle notifocations
     socketNotificationReceived: function (notification, payload) {
         const self = this;
@@ -340,6 +343,7 @@ function logStart() {
 function log(msg) {
     console.log(logStart() + msg);
 }
+
 // --------------------------------------- Debugging
 function debug(msg) {
     if (debugMe) log(msg);
