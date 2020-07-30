@@ -13,10 +13,10 @@
  */
 const NodeHelper = require("node_helper");
 const request = require("request-promise");
-var HttpsProxyAgent = require('https-proxy-agent');
-var Url = require('url');
-var Departure = require('./departure.js');
-var debugMe = false;
+const HttpsProxyAgent = require('https-proxy-agent');
+const Url = require('url');
+const Departure = require('./departure.js');
+let debugMe = false;
 
 module.exports = NodeHelper.create({
 
@@ -29,7 +29,7 @@ module.exports = NodeHelper.create({
 
     // --------------------------------------- Schedule a departure update
     scheduleUpdate: function () {
-        var self = this;
+        const self = this;
         debug('scheduleUpdate=' + self.getNextUpdateInterval());
         this.updatetimer = setInterval(function () { // This timer is saved in uitimer so that we can cancel it
             self.getDepartures();
@@ -38,16 +38,16 @@ module.exports = NodeHelper.create({
 
     // --------------------------------------- Retrive departure info
     getDepartures: function () {
-        var self = this;
+        const self = this;
 
         clearInterval(this.updatetimer); // Clear the timer so that we can set it again
 
         //debug("stationid is array="+Array.isArray(this.config.stationid));
-        var Proms = [];
+        const Proms = [];
         // Loop over all stations
         if (this.config.stations !== undefined) {
             this.config.stations.forEach(station => {
-                var P = new Promise((resolve, reject) => {
+                const P = new Promise((resolve, reject) => {
                     self.getDeparture(station, resolve, reject);
                 });
                 debug('Pushing promise for station ' + station.stationId);
@@ -80,11 +80,11 @@ module.exports = NodeHelper.create({
     //  }
     getDeparture: function(station, resolve, reject) {
         log('Getting departures for station id ' + station.stationId);
-        var self = this;
+        const self = this;
 
         // http://api.sl.se/api2/realtimedeparturesV4.<FORMAT>?key=<DIN API NYCKEL>&siteid=<SITEID>&timewindow=<TIMEWINDOW>
-        var transport = (this.config.SSL ? 'https' : 'http');
-        var opt = {
+        const transport = (this.config.SSL ? 'https' : 'http');
+        const opt = {
             uri: transport + '://api.sl.se/api2/realtimedeparturesV4.json',
             qs: {
                 key: this.config.apikey,
@@ -109,10 +109,10 @@ module.exports = NodeHelper.create({
         console.log(opt);
         request(opt)
             .then(function (resp) {
-                if (resp.StatusCode == 0) {
+                if (resp.StatusCode === 0) {
                     //console.log(resp);
-                    var CurrentDepartures = {};
-                    var departures = [];
+                    const CurrentDepartures = {};
+                    const departures = [];
                     CurrentDepartures.StationId = station.stationId;
                     CurrentDepartures.StationName = (station.stationName === undefined ? 'NotSet' : station.stationName);
                     CurrentDepartures.LatestUpdate = resp.ResponseData.LatestUpdate; // Anger när realtidsinformationen (DPS) senast uppdaterades.
@@ -134,10 +134,10 @@ module.exports = NodeHelper.create({
                     //console.log(departures);
 
                     // Add the sorted arrays into one array
-                    var temp = []
+                    const temp = [];
                     for (var ix = 0; ix < departures.length; ix++) {
                         if (departures[ix] !== undefined) {
-                            for (var iy = 0; iy < departures[ix].length; iy++) {
+                            for (let iy = 0; iy < departures[ix].length; iy++) {
                                 temp.push(departures[ix][iy]);
                             }
                         }
@@ -162,9 +162,9 @@ module.exports = NodeHelper.create({
 
     // --------------------------------------- Add departures to our departures array
     addDepartures: function (station, departures, depArray) {
-        for (var ix = 0; ix < depArray.length; ix++) {
-            var element = depArray[ix];
-            var dep = new Departure(element);
+        for (let ix = 0; ix < depArray.length; ix++) {
+            const element = depArray[ix];
+            let dep = new Departure(element);
             //debug("BLine: " + dep.LineNumber);
             dep = this.fixJourneyDirection(station, dep); 
             if (this.isWantedLine(station, dep)) {
@@ -181,21 +181,21 @@ module.exports = NodeHelper.create({
 
     // --------------------------------------- Are we asking for this direction
     isWantedDirection: function (dir) {
-        if (this.config.direction !== undefined && this.config.direction != '') {
-            return dir == this.config.direction;
+        if (this.config.direction !== undefined && this.config.direction !== '') {
+            return dir === this.config.direction;
         }
         return true;
     },
 
     // --------------------------------------- If we want to change direction number on a line
     fixJourneyDirection: function (station, dep) {
-        var swapper = [0, 2, 1];
+        const swapper = [0, 2, 1];
         if (station.lines !== undefined && Array.isArray(station.lines)) {
-            for (var il=0; il < station.lines.length; il++) { // Check if this is a line we have defined
-                if (dep.LineNumber == station.lines[il].line) {
+            for (let il=0; il < station.lines.length; il++) { // Check if this is a line we have defined
+                if (dep.LineNumber === station.lines[il].line) {
                     debug("Checking direction for line "+ dep.LineNumber + " Dir: " + dep.JourneyDirection);
                     if (station.lines[il].swapDir !== undefined && station.lines[il].swapDir) {
-                        var newdir = swapper[dep.JourneyDirection];
+                        const newdir = swapper[dep.JourneyDirection];
                         debug("Swapping direction for line "+ dep.LineNumber + " From: " + dep.JourneyDirection + " To: " + newdir);
                         dep.JourneyDirection = newdir;
                     }
@@ -207,26 +207,18 @@ module.exports = NodeHelper.create({
 
     // --------------------------------------- Are we asking for this line in this direction
     isWantedLine: function (station, dep) {
-        //debug('0 ')
         if (station.lines !== undefined) {
             if (Array.isArray(station.lines)) {
                 //debug('1')
-                for (var il=0; il < station.lines.length; il++) { // Check if this is a line we want
-                    //debug('2 '+ il)
-                    //debug(typeof(dep.LineNumber) === 'string');
-                    //debug(typeof(dep.LineNumber));
-                    l1 = (typeof(dep.LineNumber) === 'string' ? dep.LineNumber.toUpperCase() : dep.LineNumber);
-                    l2 = (typeof(station.lines[il].line) === 'string' ? station.lines[il].line.toUpperCase() : station.lines[il].line);
+                for (let il=0; il < station.lines.length; il++) { // Check if this is a line we want
+                    line1 = (typeof(dep.LineNumber) === 'string' ? dep.LineNumber.toUpperCase() : dep.LineNumber);
+                    line2 = (typeof(station.lines[il].line) === 'string' ? station.lines[il].line.toUpperCase() : station.lines[il].line);
                     debug("Lines "+ dep.LineNumber + " checked against "+ station.lines[il].line);
                     //debug("Lines t "+ typeof(dep.LineNumber) + " checked against t "+ typeof(station.lines[il].line));
-                    if (l1 == l2) {
+                    if (line1 === line2) {
                         debug("Checking line "+ dep.LineNumber + " Dir: " + dep.JourneyDirection)
                         if (station.lines[il].direction !== undefined) {
-                            if (dep.JourneyDirection == station.lines[il].direction) {
-                                return true;
-                            } else {
-                                return false;
-                            }
+                            return dep.JourneyDirection === station.lines[il].direction;
                         } else {
                             return true; // We take all directions for this line
                         }
@@ -242,35 +234,11 @@ module.exports = NodeHelper.create({
         }
     },
 
-    // --------------------------------------- Are we asking for this direction
-    isWantedLineXXX: function (line) {
-        if (this.config.lines !== undefined) {
-            if (this.config.lines.length > 0) {
-                for (var ix = 0; ix < this.config.lines.length; ix++) {
-                    // Handle objects in lines
-                    if (line == this.getLineNumber(ix)) return true;
-                }
-            } else return true; // Its defined but does not contain anything = we want all lines
-        } else return true; // Its undefined = we want all lines
-        return false;
-    },
-
-    // --------------------------------------- Get the line number of a lines entry
-    getLineNumber: function (ix) {
-        var wasarray = false;
-        var ll = this.config.lines[ix];
-        if (Array.isArray(ll)) { //ll !== null && typeof ll === 'array') {
-            ll = ll[0];
-            wasarray = true;
-        }
-        //debug("IX: "+ ix + " LL:" + ll + " wasarray " + wasarray);                            
-        return ll;
-    },
-
     // --------------------------------------- Figure out the next update time
     getNextUpdateInterval: function() {
-        if (this.config.highUpdateInterval === undefined) return this.config.updateInterval;
-        // TODO: dont throw here use the normal update time but log the errors
+        if (this.config.highUpdateInterval === undefined) {
+            return this.config.updateInterval;
+        }
         if (this.config.highUpdateInterval.times === undefined) {
             log("ERROR: highUpdateInterval.times is undefined in configuration.");
             log("ERROR: Please remove the highUpdateInterval parameter if you do not use it.");
@@ -295,8 +263,8 @@ module.exports = NodeHelper.create({
     
     // --------------------------------------- Check if now is in this time
     isBetween: function (days, start, stop) {
-        var now = new Date();
-        var dow = now.getDay();
+        const now = new Date();
+        const dow = now.getDay();
         switch (days) {
             case 'weekdays':
                 if (0 < dow && dow < 6) {
@@ -304,7 +272,7 @@ module.exports = NodeHelper.create({
                 }
             break;
             case 'weekends':
-                if (0 == dow || dow == 6) {
+                if (0 === dow || dow === 6) {
                     return this.isTimeBetween(start, stop);
                 }
             break;
@@ -314,11 +282,11 @@ module.exports = NodeHelper.create({
     
     // --------------------------------------- Check if now is between these times
     isTimeBetween: function (start, stop) {
-        var now = new Date();
-        var st = dateObj(start);
-        var en = dateObj(stop);
+        const now = new Date();
+        let st = dateObj(start);
+        let en = dateObj(stop);
         if (st > en) {      // check if start comes before end
-            var temp = st;  // if so, assume it's across midnight
+            const temp = st;  // if so, assume it's across midnight
             st = en;        // and swap the dates
             en = temp;
         }
@@ -335,7 +303,7 @@ module.exports = NodeHelper.create({
             debugMe = this.config.debug;
             self.scheduleUpdate();
             self.getDepartures(); // Get it first time
-        };
+        }
     }
 });
 
@@ -343,21 +311,21 @@ module.exports = NodeHelper.create({
 // Utilities
 //
 function dynamicSort(property) {
-    var sortOrder = 1;
+    let sortOrder = 1;
     if (property[0] === "-") {
         sortOrder = -1;
         property = property.substr(1);
     }
     return function (a, b) {
-        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        const result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
         return result * sortOrder;
     }
 }
 
 // --------------------------------------- Create a date object with the time in timeStr (hh:mm)
 function dateObj(timeStr) {
-    var parts = timeStr.split(':');
-    var date  = new Date();
+    const parts = timeStr.split(':');
+    const date = new Date();
     date.setHours(+parts.shift());
     date.setMinutes(+parts.shift());
     return date;
