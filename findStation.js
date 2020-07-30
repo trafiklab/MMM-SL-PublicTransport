@@ -15,8 +15,7 @@ var request = require('request-promise');
 var apikey = process.argv[2];
 var searchstring = process.argv[3];
 if (searchstring === '-t') {
-    var stationid = process.argv[4];    
-    var mode = 2;
+    mode = 2;
 }
 
 // --------------------------------------------------------------------
